@@ -13,8 +13,9 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 public class StatementController {
 	
-	@Autowired DiscoveryClient client;
-	
+	//@Autowired DiscoveryClient client;
+	@Autowired RestTemplate template;
+
 	@GetMapping("/")
 	public String getStatement(){
 		return getWord("EurekaClientSubject")+" "
@@ -23,7 +24,7 @@ public class StatementController {
 	}
 	
 	private String getWord(String serviceName){
-		List<ServiceInstance> list=client.getInstances(serviceName);
+		/*List<ServiceInstance> list=client.getInstances(serviceName);
 		if (list != null && list.size() > 0 ) {
 			URI uri;
 			if(serviceName.equals("EurekaClientNoun"))
@@ -34,6 +35,10 @@ public class StatementController {
 			    return (new RestTemplate()).getForObject(uri,String.class);
 			  }
 		}
-		return null;
+		return null;*/
+		if (serviceName.equals("EurekaClientNoun"))
+			return template.getForObject("http://" + serviceName + "/Noun", String.class);
+		else
+			return template.getForObject("http://" + serviceName, String.class);
 	}
 }

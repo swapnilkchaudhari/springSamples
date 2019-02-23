@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class NounController {
 
-	@Value("${words})")
+	@Value("${words}")
 	String wordString;
 	
 	@RequestMapping(method=RequestMethod.GET, path="/Noun")

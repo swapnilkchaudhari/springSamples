@@ -1,3 +1,8 @@
 spring:
   application:
     name: EurekaClientNoun
+# Allow Eureka to recognize two apps of the same type
+# on the same host as separate instances (see bonus step):
+eureka:
+  instance:
+    instanceId: ${spring.cloud.client.hostname}:${spring.application.name}:${spring.application.instance_id:${random.value}}

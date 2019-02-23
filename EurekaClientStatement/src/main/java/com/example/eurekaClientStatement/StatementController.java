@@ -14,7 +14,8 @@ import org.springframework.web.client.RestTemplate;
 public class StatementController {
 	
 	//@Autowired DiscoveryClient client;
-	@Autowired RestTemplate template;
+	@Autowired
+	RestTemplate template;
 
 	@GetMapping("/")
 	public String getStatement(){

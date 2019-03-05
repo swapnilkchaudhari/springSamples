@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -14,18 +15,28 @@ import org.springframework.web.client.RestTemplate;
 public class StatementController {
 	
 	//@Autowired DiscoveryClient client;
+	/*@Autowired
+	private RestTemplate template;*/
+
 	@Autowired
-	RestTemplate template;
+	private NounClient nounClient;
+
+	@Autowired private SubjectClient subjectClient;
+
+	@Autowired private VerbClient verbClient;
 
 	@GetMapping("/")
 	public String getStatement(){
-		return getWord("EurekaClientSubject")+" "
+		return subjectClient.getSubject()+" "
+				+verbClient.getVerb()+" "
+				+nounClient.getNoun()+".";
+		/*return getWord("EurekaClientSubject")+" "
 				+getWord("EurekaClientVerb")+" "
-				+getWord("EurekaClientNoun")+".";
+				+getWord("EurekaClientNoun")+".";*/
 	}
 	
-	private String getWord(String serviceName){
-		/*List<ServiceInstance> list=client.getInstances(serviceName);
+	/*private String getWord(String serviceName){
+		*//*List<ServiceInstance> list=client.getInstances(serviceName);
 		if (list != null && list.size() > 0 ) {
 			URI uri;
 			if(serviceName.equals("EurekaClientNoun"))
@@ -36,10 +47,28 @@ public class StatementController {
 			    return (new RestTemplate()).getForObject(uri,String.class);
 			  }
 		}
-		return null;*/
+		return null;*//*
 		if (serviceName.equals("EurekaClientNoun"))
 			return template.getForObject("http://" + serviceName + "/Noun", String.class);
 		else
 			return template.getForObject("http://" + serviceName, String.class);
-	}
+	}*/
+}
+
+@FeignClient(name="EurekaClientNoun")
+interface NounClient{
+	@GetMapping("/Noun")
+	String getNoun();
+}
+
+@FeignClient(name="EurekaClientSubject")
+interface SubjectClient{
+	@GetMapping("/")
+	String getSubject();
+}
+
+@FeignClient(name = "EurekaClientVerb")
+interface VerbClient{
+	@GetMapping("/")
+	String getVerb();
 }

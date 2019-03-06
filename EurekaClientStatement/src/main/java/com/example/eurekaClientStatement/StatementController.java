@@ -3,40 +3,44 @@ package com.example.eurekaClientStatement;
 import java.net.URI;
 import java.util.List;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class StatementController {
-	
-	//@Autowired DiscoveryClient client;
+
+    //@Autowired DiscoveryClient client;
 	/*@Autowired
 	private RestTemplate template;*/
 
-	@Autowired
-	private NounClient nounClient;
+    @Autowired
+    private NounClient nounClient;
 
-	@Autowired private SubjectClient subjectClient;
+    @Autowired
+    private SubjectClient subjectClient;
 
-	@Autowired private VerbClient verbClient;
+    @Autowired
+    private VerbClient verbClient;
 
-	@GetMapping("/")
-	public String getStatement(){
-		return subjectClient.getSubject()+" "
-				+verbClient.getVerb()+" "
-				+nounClient.getNoun()+".";
+    @GetMapping("/")
+    public String getStatement() {
+        return subjectClient.getSubject() + " "
+                + verbClient.getVerb() + " "
+                + nounClient.getNoun() + ".";
 		/*return getWord("EurekaClientSubject")+" "
 				+getWord("EurekaClientVerb")+" "
 				+getWord("EurekaClientNoun")+".";*/
-	}
-	
-	/*private String getWord(String serviceName){
-		*//*List<ServiceInstance> list=client.getInstances(serviceName);
+    }
+
+    /*private String getWord(String serviceName){
+     *//*List<ServiceInstance> list=client.getInstances(serviceName);
 		if (list != null && list.size() > 0 ) {
 			URI uri;
 			if(serviceName.equals("EurekaClientNoun"))
@@ -55,20 +59,38 @@ public class StatementController {
 	}*/
 }
 
-@FeignClient(name="EurekaClientNoun")
-interface NounClient{
-	@GetMapping("/Noun")
-	String getNoun();
+@FeignClient(name = "EurekaClientNoun", fallback = SubjectFallback.class)
+interface NounClient {
+    @GetMapping("/Noun")
+    String getNoun();
 }
 
-@FeignClient(name="EurekaClientSubject")
-interface SubjectClient{
-	@GetMapping("/")
-	String getSubject();
+@FeignClient(name = "EurekaClientSubject", fallback = SubjectFallback.class)
+interface SubjectClient {
+    @GetMapping("/")
+    String getSubject();
 }
 
-@FeignClient(name = "EurekaClientVerb")
-interface VerbClient{
-	@GetMapping("/")
-	String getVerb();
+@FeignClient(name = "EurekaClientVerb", fallback = SubjectFallback.class)
+interface VerbClient {
+    @GetMapping("/")
+    String getVerb();
+}
+
+@Component
+class SubjectFallback implements SubjectClient, VerbClient, NounClient {
+    @Override
+    public String getSubject() {
+        return "defaultSubject";
+    }
+
+    @Override
+    public String getVerb() {
+        return "defaultVerb";
+    }
+
+    @Override
+    public String getNoun() {
+        return "defaultNoun";
+    }
 }

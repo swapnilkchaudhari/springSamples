@@ -1,3 +1,6 @@
 spring:
   application:
     name: EurekaStatement
+feign:
+  hystrix:
+    enabled: true

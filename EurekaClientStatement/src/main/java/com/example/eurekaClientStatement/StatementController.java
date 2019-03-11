@@ -3,12 +3,18 @@ package com.example.eurekaClientStatement;
 import java.net.URI;
 import java.util.List;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import feign.FeignException;
+import feign.RequestLine;
+import feign.hystrix.FallbackFactory;
+import feign.hystrix.HystrixFeign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -20,8 +26,8 @@ public class StatementController {
 	/*@Autowired
 	private RestTemplate template;*/
 
-    @Autowired
-    private NounClient nounClient;
+	@Autowired
+    private NounClientImpl nounClient;
 
     @Autowired
     private SubjectClient subjectClient;
@@ -33,7 +39,7 @@ public class StatementController {
     public String getStatement() {
         return subjectClient.getSubject() + " "
                 + verbClient.getVerb() + " "
-                + nounClient.getNoun() + ".";
+                +nounClient.getNoun()+".";
 		/*return getWord("EurekaClientSubject")+" "
 				+getWord("EurekaClientVerb")+" "
 				+getWord("EurekaClientNoun")+".";*/
@@ -59,7 +65,23 @@ public class StatementController {
 	}*/
 }
 
-@FeignClient(name = "EurekaClientNoun", fallback = SubjectFallback.class)
+@Service
+class NounClientImpl {
+
+    @Autowired
+    private NounClient nounClient;
+
+    @com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand(fallbackMethod = "getNounFallBack")
+    public String getNoun() {
+        return nounClient.getNoun();
+    }
+
+    public String getNounFallBack() {
+        return "HystrixCommandNoun";
+    }
+}
+
+@FeignClient(name = "EurekaClientNoun"/*, fallback = SubjectFallback.class*/)
 interface NounClient {
     @GetMapping("/Noun")
     String getNoun();
@@ -78,7 +100,8 @@ interface VerbClient {
 }
 
 @Component
-class SubjectFallback implements SubjectClient, VerbClient, NounClient {
+class SubjectFallback implements SubjectClient, VerbClient {
+
     @Override
     public String getSubject() {
         return "defaultSubject";
@@ -89,8 +112,8 @@ class SubjectFallback implements SubjectClient, VerbClient, NounClient {
         return "defaultVerb";
     }
 
-    @Override
+    /*@Override
     public String getNoun() {
         return "defaultNoun";
-    }
+    }*/
 }
